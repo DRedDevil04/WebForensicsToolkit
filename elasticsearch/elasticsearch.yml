@@ -1,0 +1,2 @@
+cluster.name: "es-demo"
+network.host: 0.0.0.0

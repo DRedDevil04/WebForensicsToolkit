@@ -1,0 +1,68 @@
+version: '3.7'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
+    container_name: es-demo
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+    networks:
+      - elk-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.16
+    container_name: kibana-demo
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-net
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.16
+    container_name: logstash-demo
+    environment:
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./php-app/logs:/var/log/phpapp:ro   # log folder from php web service
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-net
+
+  phpapp:
+    build: ./php-app
+    container_name: php-web
+    volumes:
+      - ./php-app/logs:/var/www/html/logs
+    ports:
+      - "8080:80"
+    networks:
+      - elk-net
+
+volumes:
+  esdata:
+
+networks:
+  elk-net:
+    driver: bridge
