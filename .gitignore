@@ -1,0 +1,83 @@
+# =====================================
+# General
+# =====================================
+*.log
+*.tmp
+*.swp
+*.bak
+*.DS_Store
+*.idea/
+*.vscode/
+*.env
+.env.*
+!env.example
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.cache/
+.coverage
+.pytest_cache/
+*.sqlite3
+*.db
+
+# =====================================
+# Python virtual environments
+# =====================================
+venv/
+env/
+.venv/
+
+
+# =====================================
+# Docker
+# =====================================
+.docker/
+docker-compose.override.yml
+*.pid
+/tmp/
+
+# =====================================
+# Logs and uploads
+# =====================================
+logs/
+*.jsonl
+*.log
+uploads/
+evidence/
+
+# =====================================
+# Project-specific
+# =====================================
+__pycache__/
+*.pem
+*.crt
+*.key
+*.zip
+*.tar
+*.tar.gz
+*.pcap
+*.ewf
+*.raw
+*.dd
+
+
+# =====================================
+# Cache / compiled / temporary
+# =====================================
+*.cache/
+*.mypy_cache/
+*.pytest_cache/
+*.coverage
+*.hypothesis/
+*.tox/
+*.nox/
+
+esdata/
+forensic_collection/

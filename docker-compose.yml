@@ -1,6 +1,8 @@
 version: '3.7'
+
 services:
 
+  # ===================== ELASTICSEARCH =====================
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.16
     container_name: es-demo
@@ -20,20 +22,22 @@ services:
     networks:
       - elk-net
 
+  # ===================== KIBANA =====================
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.16
     container_name: kibana-demo
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
     depends_on:
       - elasticsearch
+    ports:
+      - "5601:5601"
     networks:
       - elk-net
     volumes:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
+  # ===================== LOGSTASH =====================
   logstash:
     image: docker.elastic.co/logstash/logstash:7.17.16
     container_name: logstash-demo
@@ -42,27 +46,51 @@ services:
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./php-app/logs:/var/log/phpapp:ro   # log folder from php web service
-    ports:
-      - "5044:5044"
+      # Application and web logs
+      - ./php-app/logs:/var/log/phpapp:ro            # upload.log, access.log
+      - ./logs/apache:/var/log/apache2:ro            # Apache logs
+      - ./modsec/logs:/var/log/waf:ro                # ModSecurity logs
     depends_on:
       - elasticsearch
     networks:
       - elk-net
 
+  # ===================== PHP + APACHE WEB APP =====================
   phpapp:
     build: ./php-app
     container_name: php-web
     volumes:
-      - ./php-app/logs:/var/www/html/logs
-    ports:
-      - "8080:80"
+      - ./php-app:/var/www/html                      # app source code (index.php, uploads/)
+      - ./php-app/logs:/var/www/html/logs            # forensic logs
+      - ./logs/apache:/var/log/apache2               # Apache logs (access/error)
+    expose:
+      - "80"
     networks:
       - elk-net
+
+  # ===================== MODSECURITY (WAF FRONTEND) =====================
+  modsec-waf:
+    image: owasp/modsecurity-crs:nginx
+    container_name: modsec-waf
+    environment:
+      - PARANOIA=1
+      - PROXY=1
+      - BACKEND=http://phpapp:80                     # Send filtered traffic to PHP app
+    volumes:
+      - ./modsec/logs:/var/log/modsecurity           # store audit logs here
+      - ./modsec/custom-rules.conf:/etc/modsecurity.d/custom-rules.conf:ro
+    depends_on:
+      - phpapp
+    ports:
+      - "8080:8080"                                   # entry point for external traffic
+    networks:
+      - elk-net
+    # command: ["/usr/sbin/nginx", "-g", "daemon off;"]
 
 volumes:
   esdata:
 
 networks:
   elk-net:
+    name: elk-net
     driver: bridge

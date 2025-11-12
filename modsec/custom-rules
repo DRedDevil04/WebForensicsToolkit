@@ -1,0 +1,18 @@
+# ============================================
+# Simple ModSecurity Custom Rules
+# Detect GET-based command execution attempts
+# ============================================
+
+SecRuleEngine DetectionOnly
+
+# Detect common command execution parameters
+SecRule QUERY_STRING "(?i)(cmd=|exec=|system=|shell=)" \
+    "id:1000,phase:2,deny,log,msg:'Possible command execution attempt (parameter name)'"
+
+# Detect suspicious commands in parameter values
+SecRule QUERY_STRING "(?i)(ls|cat|whoami|wget|curl|bash|sh)" \
+    "id:1001,phase:2,deny,log,msg:'Possible command execution attempt (command in parameter value)'"
+
+# Detect command chaining characters (;, &&, |)
+SecRule QUERY_STRING "(;|&&|\|)" \
+    "id:1002,phase:2,deny,log,msg:'Command chaining detected in GET request'"
