@@ -70,6 +70,7 @@ services:
 
   # ===================== MODSECURITY (WAF FRONTEND) =====================
   modsec-waf:
+    user: root
     image: owasp/modsecurity-crs:nginx
     container_name: modsec-waf
     environment:
@@ -78,7 +79,8 @@ services:
       - BACKEND=http://phpapp:80                     # Send filtered traffic to PHP app
     volumes:
       - ./modsec/logs:/var/log/modsecurity           # store audit logs here
-      - ./modsec/custom-rules.conf:/etc/modsecurity.d/custom-rules.conf:ro
+      - ./modsec/custom-rules:/etc/modsecurity.d/custom-rules.conf:ro
+      - ./modsec/modsecurity.conf:/etc/nginx/templates/modsecurity.d/modsecurity.conf.template:ro
     depends_on:
       - phpapp
     ports:

@@ -16,3 +16,16 @@ SecRule QUERY_STRING "(?i)(ls|cat|whoami|wget|curl|bash|sh)" \
 # Detect command chaining characters (;, &&, |)
 SecRule QUERY_STRING "(;|&&|\|)" \
     "id:1002,phase:2,deny,log,msg:'Command chaining detected in GET request'"
+
+# ============================================
+# Basic SQL Injection (SQLi) detection
+# ============================================
+SecRule QUERY_STRING "(?i)(union select|select .* from|drop table|insert into|update .* set|delete from)" \
+    "id:1150,phase:2,deny,log,msg:'Basic SQL Injection attempt detected in GET request'"
+
+# ============================================
+# Basic Cross-Site Scripting (XSS) detection
+# ============================================
+SecRule QUERY_STRING "(?i)(<script>|</script>|javascript:|onerror=|onload=)" \
+    "id:1200,phase:2,deny,log,msg:'Basic XSS attempt detected in GET request'"
+
